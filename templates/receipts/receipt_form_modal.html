@@ -1,0 +1,46 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-lg w-full">
+        <div class="flex justify-between items-center bg-blue-600 text-white px-4 py-3 rounded-t-lg">
+            <h3 class="text-lg font-semibold">{{ form_title }}</h3>
+            <button id="closeModalBtn" class="text-white hover:text-gray-200">&Chi;</button>
+        </div>
+        <form id="receiptForm" method="post" action="{{ action_url }}">
+            <input type="hidden" name="q" value="{{ query }}">
+            <input type="hidden" name="page" value="{{ page }}">
+            {% csrf_token %}
+            <div class="p-4 space-y-4">
+                {{ form.non_field_errors }}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Payor Name</label>
+                    {{ form.payor_name }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount</label>
+                    {{ form.amount }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Reference Number</label>
+                    {{ form.reference_number }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Payment Channel</label>
+                    {{ form.payment_channel }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mode of Payment</label>
+                    {{ form.mode_of_payment }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Purpose</label>
+                    {{ form.purpose }}
+                </div>
+            </div>
+            <div class="px-4 py-3 border-t bg-gray-50 flex justify-end rounded-b-lg">
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

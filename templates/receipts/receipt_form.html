@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">{% if form.instance.pk %}Edit eOR{% else %}Create eOR{% endif %}</h1>
+    <form method="post" class="max-w-lg">
+        {% csrf_token %}
+        <div class="mb-4">
+            {% for field in form %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="block text-gray-700 font-bold mb-2">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ field.errors }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn-custom">Save</button>
+        <a href="{% url 'receipt_list' %}?q={{ query|urlencode }}&page={{ page|default:1 }}">Cancel</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DOST 02 - eOR System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Custom CSS for unique styling */
+        .nav-bg-custom {
+            background: linear-gradient(90deg, #1e40af 0%, #3b82f6 100%);
+            transition: background 0.3s ease;
+        }
+        .nav-bg-custom:hover {
+            background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+        }
+        .logo-text {
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 1px;
+        }
+        .btn-custom {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        .btn-custom:hover {
+            background-color: #2563eb; /* Blue-600 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="nav-bg-custom p-4 text-white shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{% url 'receipt_list' %}" class="flex items-center logo-text text-2xl font-bold text-white hover:text-gray-200">
+                <img src="{% static 'images/dost-logo.png' %}" alt="DOST Logo" class="h-10 mr-2">
+                DOST 02 - Electronic OR System
+            </a>
+            <div class="flex items-center">
+                {% if user.is_authenticated %}
+                    <span class="mr-4 text-white flex items-center">
+                        <img src="{% static 'images/user-gray.svg' %}" alt="User" class="w-5 h-5 mr-2">
+                        {{ user.username }}
+                    </span>
+                    <a href="{% url 'logout' %}" class="btn-custom">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn-custom ml-4">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto mt-8 p-4 bg-white shadow rounded-lg">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

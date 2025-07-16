@@ -1,0 +1,81 @@
+{# templates/receipts/receipt_table.html #}
+{% load static %}
+{% if receipts %}
+<div id='receiptTableContainer' class="overflow-x-auto">
+    <table class="w-full bg-white border border-gray-200 rounded-lg">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-4 text-left">eOR Number</th>
+                <th class="py-3 px-4 text-left">Date</th>
+                <th class="py-3 px-4 text-left">Payor</th>
+                <th class="py-3 px-4 text-left">Amount</th>
+                <th class="py-3 px-4 text-left">Reference Number</th>
+                <th class="py-3 px-4 text-left">Payment Channel</th>
+                <th class="py-3 px-4 text-left">Mode of Payment</th>
+                <th class="py-3 px-4 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for receipt in receipts %}
+                <tr data-receipt-id="{{ receipt.pk }}" class="{% if receipt.is_deleted %}bg-red-100 {% endif %}border-b hover:bg-gray-50">
+                    <td class="py-3 px-4">{{ receipt.or_number }}</td>
+                    <td class="py-3 px-4">{{ receipt.date_time|date:"m-d-Y h:i:s" }}</td>
+                    <td class="py-3 px-4">{{ receipt.payor_name }}</td>
+                    <td class="py-3 px-4 text-right">PHP {{ receipt.amount|floatformat:2 }}</td>
+                    <td class="py-3 px-4">{{ receipt.reference_number|default:"" }}</td>
+                    <td class="py-3 px-4">{{ receipt.payment_channel|default:"" }}</td>
+                    <td class="py-3 px-4">{{ receipt.mode_of_payment|default:"" }}</td>
+                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                        {% if not receipt.is_deleted %}
+                            <a href="#" data-url="{% url 'receipt_edit' receipt.pk %}?q={{ query|urlencode }}&page={{ receipts.number }}"
+                                class="mr-2 inline-block open-form-modal" title="Edit">
+                                <img src="{% static 'images/edit.svg' %}" alt="Edit" class="w-5 h-5 inline">
+                            </a>
+                            {% if user.is_superuser %}
+                                <a href="#" 
+                                    class="mr-2 inline-block open-form-modal"
+                                    data-base-url="{% url 'receipt_delete' receipt.pk %}"
+                                    data-url="?q={{ query|urlencode }}&page={{ receipts.number }}"
+                                    title="Delete">
+                                    <img src="{% static 'images/delete.svg' %}" alt="Delete" class="w-5 h-5 inline">
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        <a href="{% url 'receipt_pdf' receipt.pk %}" class="inline-block" title="Preview PDF" target="_blank">
+                            <img src="{% static 'images/download.svg' %}" alt="PDF" class="w-5 h-5 inline">
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="py-3 px-4 text-center text-gray-500">No receipts found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="mt-6">
+        {% if receipts.has_other_pages %}
+            <div class="flex justify-center space-x-2">
+                {% if receipts.has_previous %}
+                    <a href="?q={{ query|urlencode }}&page=1"
+                        class="px-3 py-1 border rounded hover:bg-gray-200">First</a>
+                    <a href="?q={{ query|urlencode }}&page={{ receipts.previous_page_number }}"
+                        class="px-3 py-1 border rounded hover:bg-gray-200">Previous</a>
+                {% endif %}
+
+                <span class="px-3 py-1 border rounded bg-gray-100 text-gray-700">{{ receipts.number }}</span>
+
+                {% if receipts.has_next %}
+                    <a href="?q={{ query|urlencode }}&page={{ receipts.next_page_number }}"
+                        class="px-3 py-1 border rounded hover:bg-gray-200">Next</a>
+                    <a href="?q={{ query|urlencode }}&page={{ receipts.paginator.num_pages }}"
+                        class="px-3 py-1 border rounded hover:bg-gray-200">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+    <p class="text-gray-500">No receipts available.</p>
+{% endif %}

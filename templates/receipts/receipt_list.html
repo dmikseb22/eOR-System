@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .gradient-button {
+            background: linear-gradient(to right, #60a5fa, #1d4ed8); /* Light blue to dark blue */
+        }
+        .gradient-button:hover {
+            background: linear-gradient(to right, #3b82f6, #1e40af); /* Slightly darker on hover */
+        }
+        .gradient-button img {
+            vertical-align: middle; /* Align image with text if needed */
+        }
+        .small-button {
+            min-width: 0;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Electronic Official Receipts</h1>
+    <div class="mb-6 flex justify-between items-center">
+        <!-- Search Form (Left) -->
+        <div class="flex items-center space-x-2 w-full md:w-1/2">
+            <form method="get" class="flex flex-grow">
+                <input type="text" name="q" value="{{ request.GET.q }}"
+                        class="flex-grow p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Search by OR Number, Payor, or Reference...">
+                <button type="submit"
+                        class="gradient-button text-white p-2 rounded-r-md flex items-center transition duration-200">
+                    <img src="{% static 'images/search-white.svg' %}" alt="Search" class="w-5 h-5 mr-2">
+                    Search
+                </button>
+            </form>
+        </div>
+
+        <!-- New Receipt Button (Right) -->
+        <div>
+            <a href="#" data-url="?q={{ query|urlencode }}&page={{ receipts.number }}" 
+                data-base-url="{% url 'receipt_create' %}"
+                class="text-white gradient-button small-button rounded flex items-center transition duration-200 p-2 open-form-modal">
+                <img src="{% static 'images/add-white.svg' %}" alt="Add" class="w-5 h-5 mr-2">New Receipt
+            </a>
+        </div>
+    </div>
+    <div id="receiptTableContainer">
+        {% include 'receipts/receipt_table.html' %}
+    </div>
+    {% block extra_modal %}
+        <div id="toastSuccess" class="fixed top-5 right-5 z-50 hidden bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-500">
+            <span id="toastMessage">Success!</span>
+        </div>
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modalContainer = document.getElementById('formModalContainer');
+
+            document.querySelectorAll('.open-form-modal').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const baseUrl = this.getAttribute('data-base-url') || this.getAttribute('data-url');
+
+                    const currentPageEl = document.querySelector('.px-3.py-1.border.rounded.bg-gray-100');
+                    const page = currentPageEl ? currentPageEl.textContent.trim() : '1';
+                    const qInput = document.querySelector('input[name="q"]');
+                    const q = qInput ? qInput.value : '';
+                    const fullUrl = `${baseUrl}?q=${encodeURIComponent(q)}&page=${page}`;
+                    loadModal(fullUrl);
+                });
+            });
+
+            function loadTable(url) {
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.table_html) {
+                        document.getElementById('receiptTableContainer').innerHTML = data.table_html;
+                    }
+                });
+            }
+
+            function bindSearchForm() {
+                const form = document.querySelector('form[method="get"]');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        const query = form.q.value;
+                        const url = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
+                        loadTable(url);
+                    });
+                }
+            }
+
+            function loadModal(url) {
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    modalContainer.innerHTML = html;
+
+                    const closeModalBtn = document.getElementById('closeModalBtn');
+                    if (closeModalBtn) {
+                        closeModalBtn.onclick = () => {
+                            modalContainer.innerHTML = '';
+                        };
+                    }
+
+                    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+                    if (cancelDeleteBtn) {
+                        cancelDeleteBtn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            modalContainer.innerHTML = '';
+                        };
+                    }
+
+                    const deleteForm = document.getElementById('deleteForm');
+                    if (deleteForm) {
+                        deleteForm.onsubmit = function (e) {
+                            e.preventDefault();
+
+                            const submitBtn = deleteForm.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = 'Deleting...';
+                            }
+
+                            const formData = new FormData(deleteForm);
+                            fetch(deleteForm.action, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const currentPage = formData.get("page") || "1";
+                                    const currentQuery = formData.get("q") || "";
+                                    const url = `?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+                                    loadTable(url);
+                                    modalContainer.innerHTML = '';
+                                    showToast("Receipt deleted successfully!");
+                                }
+                            });
+                        };
+                    }
+
+                    const form = document.getElementById('receiptForm');
+                    if (form) {
+                        form.onsubmit = function (e) {
+                            e.preventDefault();
+
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = 'Saving...';
+                            }
+
+                            const formData = new FormData(form);
+                            fetch(form.action, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const currentPage = form.querySelector('input[name="page"]')?.value || 1;
+                                    const currentQuery = form.querySelector('input[name="q"]')?.value || '';
+                                    const url = `?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+                                    loadTable(url);
+                                    modalContainer.innerHTML = '';
+                                    showToast("Receipt saved successfully!");
+                                } else if (data.html) {
+                                    modalContainer.innerHTML = data.html;
+                                }
+                            });
+                        };
+                    }
+                });
+            }
+
+            // ✅ ONE Delegated Event Handler
+            document.getElementById('receiptTableContainer').addEventListener('click', function (e) {
+                const paginationLink = e.target.closest('a[href*="page="]');
+                const modalBtn = e.target.closest('.open-form-modal');
+                const deleteBtn = e.target.closest('.open-delete-modal');
+
+                if (paginationLink) {
+                    e.preventDefault();
+                    loadTable(paginationLink.href);
+                }
+
+                if (modalBtn) {
+                    e.preventDefault();
+
+                    const baseUrl = modalBtn.getAttribute('data-base-url') || modalBtn.getAttribute('data-url');
+                    const currentPageEl = document.querySelector('.px-3.py-1.border.rounded.bg-gray-100');
+                    const page = currentPageEl ? currentPageEl.textContent.trim() : '1';
+                    const qInput = document.querySelector('input[name="q"]');
+                    const q = qInput ? qInput.value : '';
+                    const fullUrl = `${baseUrl}?q=${encodeURIComponent(q)}&page=${page}`;
+                    loadModal(fullUrl);
+                }
+
+                if (deleteBtn) {
+                    e.preventDefault();
+
+                    const url = deleteBtn.getAttribute('data-url');
+                    fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.text())
+                    .then(html => {
+                        modalContainer.innerHTML = html;
+                    });
+                }
+            });
+
+            bindSearchForm();
+
+            // Toast function stays the same
+            function showToast(message) {
+                const toast = document.getElementById('toastSuccess');
+                const messageEl = document.getElementById('toastMessage');
+                messageEl.textContent = message;
+                toast.classList.remove('hidden', 'opacity-0');
+                toast.classList.add('opacity-100');
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => toast.classList.add('hidden'), 500);
+                }, 2000);
+            }
+        });
+        </script>
+    {% endblock %}
+    <div id="formModalContainer"></div>
+{% endblock %}
