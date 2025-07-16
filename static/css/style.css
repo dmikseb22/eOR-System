@@ -1,0 +1,21 @@
+.nav-bg-custom {
+    background-color: #1e40af;
+    transition: background-color 0.3s ease;
+}
+.nav-bg-custom:hover {
+    background-color: #1e3a8a;
+}
+.logo-text {
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 1px;
+}
+.btn-custom {
+    background-color: #3b82f6; /* Blue-500 */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+.btn-custom:hover {
+    background-color: #2563eb; /* Blue-600 */
+}
